@@ -27,7 +27,7 @@ def home():
 
 #  A route to add a new task
 @app.post("/add-task")
-def add_task(name: str, user_id: int):
+def add_task(name: str, user_id: str):
     db = SessionLocal()
     task = Task(name=name, user_id=user_id)
     db.add(task)
@@ -57,7 +57,7 @@ def get_tasks():
 
 # A route to get tasks for a specific user
 @app.get("/tasks/{user_id}")
-def get_tasks(user_id: int):
+def get_tasks(user_id: str):
     db = SessionLocal()
     return db.query(Task).filter(Task.user_id == user_id).all()
 
@@ -103,6 +103,6 @@ def login(username: str):
 
 
 @app.get("/entries/{user_id}")
-def get_entries(user_id: int):
+def get_entries(user_id: str):
     db = SessionLocal()
     return db.query(TaskEntry).all()
