@@ -7,7 +7,7 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    user_id = Column(Integer)
+    user_id = Column(String)
 
 # TaskEntry model represents an entry for a task, which includes the task ID, status, comment, and date. It is linked to the Task model through the task_id field.
 class TaskEntry(Base):
