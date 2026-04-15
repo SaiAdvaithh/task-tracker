@@ -8,6 +8,7 @@ from collections import defaultdict
 from models import User
 
 
+
 # Create the FastAPI app & set up CORS middleware to allow cross-origin requests from any origin. This is important for frontend applications that may be hosted on a different domain than the backend
 app = FastAPI()
 app.add_middleware(
