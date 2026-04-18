@@ -11,52 +11,59 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+
   // FETCH TASKS
   const fetchTasks = async () => {
-    const res = await fetch(`${BASE_URL}/tasks/${USER_ID}`);
-    const data = await res.json();
-    setTasks(Array.isArray(data) ? data : []);
+    try {
+      const res = await fetch(`${BASE_URL}/tasks/${USER_ID}`);
+      const data = await res.json();
+      setTasks(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Tasks fetch failed:", err);
+    }
   };
-
-  const newTasks = tasks.filter(task => !entries[task.id]?.status);
-  const doneTasks = tasks.filter(task => entries[task.id]?.status === "Done");
-  const pendingTasks = tasks.filter(task => entries[task.id]?.status === "Pending");
-  const notDoneTasks = tasks.filter(task => entries[task.id]?.status === "Not Done");
 
   // FETCH ENTRIES
   const fetchEntries = async () => {
-    const res = await fetch(`${BASE_URL}/entries/${USER_ID}`);
-    const data = await res.json();
+    try {
+      const res = await fetch(`${BASE_URL}/entries/${USER_ID}`);
+      const data = await res.json();
 
-    const formatted = {};
+      const formatted = {};
 
-    if (Array.isArray(data)) {
-      data.forEach(entry => {
-        if (entry.date === selectedDate) {
-          formatted[entry.task_id] = entry;
-        }
-      });
+      if (Array.isArray(data)) {
+        data.forEach(entry => {
+          if (entry.date === selectedDate) {
+            formatted[entry.task_id] = entry;
+          }
+        });
+      }
+
+      setEntries(formatted);
+    } catch (err) {
+      console.error("Entries fetch failed:", err);
     }
-
-    setEntries(formatted);
   };
 
   useEffect(() => {
     fetchTasks();
     fetchEntries();
-
-  },[selectedDate]);
+  }, [selectedDate]);
 
   // ADD TASK
   const addTask = async () => {
     if (!newTask.trim()) return;
 
-    await fetch(`${BASE_URL}/add-task?name=${newTask}&user_id=${USER_ID}`, {
-      method: "POST"
-    });
+    try {
+      await fetch(`${BASE_URL}/add-task?name=${newTask}&user_id=${USER_ID}`, {
+        method: "POST"
+      });
 
-    setNewTask("");
-    fetchTasks();
+      setNewTask("");
+      fetchTasks();
+    } catch (err) {
+      console.error("Add task failed:", err);
+    }
   };
 
   // HANDLE CHANGE
@@ -79,13 +86,24 @@ function App() {
       return;
     }
 
-    await fetch(
-      `${BASE_URL}/add-entry?task_id=${taskId}&status=${entry.status}&comment=${entry.comment || ""}&date=${selectedDate}`,
-      { method: "POST" }
-    );
+    try {
+      await fetch(
+        `${BASE_URL}/add-entry?task_id=${taskId}&status=${entry.status}&comment=${entry.comment || ""}&date=${selectedDate}`,
+        { method: "POST" }
+      );
 
-    alert("Saved");
+      await fetchEntries(); // ✅ refresh data after save
+      alert("Saved");
+    } catch (err) {
+      console.error("Save failed:", err);
+    }
   };
+
+  // GROUPING
+  const newTasks = tasks.filter(task => !entries[task.id]?.status);
+  const doneTasks = tasks.filter(task => entries[task.id]?.status === "Done");
+  const pendingTasks = tasks.filter(task => entries[task.id]?.status === "Pending");
+  const notDoneTasks = tasks.filter(task => entries[task.id]?.status === "Not Done");
 
   return (
     <div style={{ padding: "20px" }}>
@@ -109,7 +127,6 @@ function App() {
           onChange={(e) => setSelectedDate(e.target.value)}
         />
       </div>
-
 
       {/* 🆕 NEW TASKS */}
       <h2>🆕 New</h2>
@@ -143,7 +160,6 @@ function App() {
         </div>
       ))}
 
-
       {/* ✅ DONE */}
       <h2>✅ Done</h2>
       {doneTasks.length === 0 && <p>No completed tasks</p>}
@@ -153,7 +169,6 @@ function App() {
           <h3>{task.name}</h3>
         </div>
       ))}
-
 
       {/* ⏳ PENDING */}
       <h2>⏳ Pending</h2>
@@ -165,7 +180,6 @@ function App() {
         </div>
       ))}
 
-
       {/* ❌ NOT DONE */}
       <h2>❌ Not Done</h2>
       {notDoneTasks.length === 0 && <p>No failed tasks</p>}
@@ -175,7 +189,6 @@ function App() {
           <h3>{task.name}</h3>
         </div>
       ))}
-
     </div>
   );
 }
