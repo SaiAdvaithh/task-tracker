@@ -5,7 +5,8 @@ function App() {
   const [newTask, setNewTask] = useState("");
   const [entries, setEntries] = useState({});
 
-  const BASE_URL = "https://task-tracker-sl0i.onrender.com";
+  const BASE_URL = process.env.REACT_APP_API_URL;
+  console.log(BASE_URL);
   const USER_ID = "test123";
 
   const [selectedDate, setSelectedDate] = useState(
@@ -107,34 +108,74 @@ function App() {
   const notDoneTasks = tasks.filter(task => entries[task.id]?.status === "Not Done");
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Task Tracker</h1>
+    <div style={{minHeight: "100vh",background: "linear-gradient(to right, #dbeafe, #e9d5ff)",padding: "30px"}}>
+      <h1 style={{fontSize: "28px", fontWeight: "bold", marginBottom: "20px", textAlign: "center"}}> Task Tracker</h1>
 
       {/* ADD TASK */}
-      <input
-        value={newTask}
-        onChange={(e) => setNewTask(e.target.value)}
-        placeholder="Enter task"
-      />
-      <button onClick={addTask}>Add Task</button>
+      <div style={{
+        display: "flex",
+        gap: "10px",
+        marginBottom: "20px",
+        justifyContent: "center"
+      }}>
+        <input
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          placeholder="Enter task"
+          style={{
+            padding: "10px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+            width: "60%"
+          }}
+        />
+
+        <button
+          onClick={addTask}
+          disabled={!newTask.trim()}
+          style={{
+            background: "#22c55e",
+            color: "white",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: "8px",
+            cursor: "pointer"
+          }}
+        >
+          Add
+        </button>
+      </div>
 
       {/* DATE SELECTOR */}
-      <div style={{ marginBottom: "10px" }}>
-        <strong>Date:</strong>
-
+      <div style={{
+        marginBottom: "20px",
+        textAlign: "center"
+      }}>
+        <strong>Date: </strong>
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
+          style={{
+            padding: "8px",
+            borderRadius: "6px",
+            border: "1px solid #ccc"
+          }}
         />
       </div>
 
       {/* 🆕 NEW TASKS */}
-      <h2>🆕 New</h2>
+      <h2 style={{ marginTop: "20px", color: "#374151" }}>🆕 New</h2>
       {newTasks.length === 0 && <p>No new tasks</p>}
 
       {newTasks.map(task => (
-        <div key={task.id} style={{ marginBottom: "10px" }}>
+        <div key={task.id} style={{
+          marginBottom: "15px",
+          padding: "15px",
+          borderRadius: "12px",
+          background: "white",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+        }}>
           <h3>{task.name}</h3>
 
           <select
@@ -157,12 +198,26 @@ function App() {
             }
           />
 
-          <button onClick={() => saveEntry(task.id)}>Save</button>
+          <button
+            onClick={() => saveEntry(task.id)}
+            disabled={!entries[task.id]?.status}
+            style={{
+              marginTop: "10px",
+              background: "#3b82f6",
+              color: "white",
+              border: "none",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              cursor: "pointer"
+            }}
+          >
+            Save
+          </button>
         </div>
       ))}
 
       {/* ✅ DONE */}
-      <h2>✅ Done</h2>
+      <h2 style={{ marginTop: "20px", color: "#374151" }}>🆕 Done</h2>
       {doneTasks.length === 0 && <p>No completed tasks</p>}
 
       {doneTasks.map(task => (
@@ -172,7 +227,7 @@ function App() {
       ))}
 
       {/* ⏳ PENDING */}
-      <h2>⏳ Pending</h2>
+      <h2 style={{ marginTop: "20px", color: "#374151" }}>🆕 Pending</h2>
       {pendingTasks.length === 0 && <p>No pending tasks</p>}
 
       {pendingTasks.map(task => (
