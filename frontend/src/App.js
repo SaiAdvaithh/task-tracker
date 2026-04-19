@@ -48,7 +48,8 @@ function App() {
   useEffect(() => {
     fetchTasks();
     fetchEntries();
-  }, [selectedDate, fetchEntries]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
 
   // ADD TASK
   const addTask = async () => {
