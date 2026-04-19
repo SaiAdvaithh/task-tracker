@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback  } from "react";
 
 function App() {
-  const [tasks, setTasks] = useState([]);use
+  const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [entries, setEntries] = useState({});
 
