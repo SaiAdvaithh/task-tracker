@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback  } from "react";
 
 function App() {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([]);use
   const [newTask, setNewTask] = useState("");
   const [entries, setEntries] = useState({});
 
@@ -24,7 +24,7 @@ function App() {
   };
 
   // FETCH ENTRIES
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/entries/${USER_ID}`);
       const data = await res.json();
@@ -43,12 +43,12 @@ function App() {
     } catch (err) {
       console.error("Entries fetch failed:", err);
     }
-  };
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchTasks();
     fetchEntries();
-  }, [selectedDate]);
+  }, [selectedDate, fetchEntries]);
 
   // ADD TASK
   const addTask = async () => {
