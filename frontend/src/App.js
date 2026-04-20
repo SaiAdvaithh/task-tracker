@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback  } from "react";
+import {  BarChart,  Bar,  XAxis,  YAxis,  Tooltip,  ResponsiveContainer} from "recharts";
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [entries, setEntries] = useState({});
+  const [weeklyData, setWeeklyData] = useState([]);
 
   const BASE_URL = process.env.REACT_APP_API_URL;
   console.log(BASE_URL);
@@ -49,6 +51,8 @@ function App() {
   useEffect(() => {
     fetchTasks();
     fetchEntries();
+    fetchWeeklyStats();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
@@ -100,6 +104,21 @@ function App() {
       console.error("Save failed:", err);
     }
   };
+
+  // WEEKLY TASK FOR CHARTS
+  const fetchWeeklyStats = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/weekly-stats`);
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setWeeklyData(data);
+      }
+    } catch (err) {
+      console.error("Weekly stats error:", err);
+    }
+  };
+
 
   // GROUPING
   const newTasks = tasks.filter(task => !entries[task.id]?.status);
@@ -163,6 +182,26 @@ function App() {
           }}
         />
       </div>
+      {/* WEEKLY DATA FOR CHARTS */}
+      {/* WEEKLY PROGRESS CHART */}
+      <div style={{
+        background: "white",
+        padding: "20px",
+        borderRadius: "12px",
+        marginBottom: "20px",
+        boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+      }}>
+        <h3 style={{ marginBottom: "10px" }}>📊 Weekly Progress</h3>
+
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart data={weeklyData}>
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="done" fill="#22c55e" radius={[5,5,0,0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* 🆕 NEW TASKS */}
       <h2 style={{ marginTop: "20px", color: "#374151" }}>🆕 New</h2>
@@ -217,7 +256,7 @@ function App() {
       ))}
 
       {/* ✅ DONE */}
-      <h2 style={{ marginTop: "20px", color: "#374151" }}>🆕 Done</h2>
+      <h2 style={{ marginTop: "20px", color: "#374151" }}> Done</h2>
       {doneTasks.length === 0 && <p>No completed tasks</p>}
 
       {doneTasks.map(task => (
@@ -227,7 +266,7 @@ function App() {
       ))}
 
       {/* ⏳ PENDING */}
-      <h2 style={{ marginTop: "20px", color: "#374151" }}>🆕 Pending</h2>
+      <h2 style={{ marginTop: "20px", color: "#374151" }}> Pending</h2>
       {pendingTasks.length === 0 && <p>No pending tasks</p>}
 
       {pendingTasks.map(task => (
