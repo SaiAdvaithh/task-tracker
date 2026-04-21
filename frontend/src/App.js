@@ -266,6 +266,8 @@ function App() {
       ))}
 
       {/* ⏳ PENDING */}
+      {/* ⏳ PENDING */}
+      
       <h2 style={{ marginTop: "20px", color: "#374151" }}> Pending</h2>
       {pendingTasks.length === 0 && <p>No pending tasks</p>}
 
