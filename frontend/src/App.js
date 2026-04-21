@@ -1,5 +1,12 @@
-import { useEffect, useState, useCallback  } from "react";
-import {  BarChart,  Bar,  XAxis,  YAxis,  Tooltip,  ResponsiveContainer} from "recharts";
+import { useEffect, useState, useCallback } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -8,7 +15,6 @@ function App() {
   const [weeklyData, setWeeklyData] = useState([]);
 
   const BASE_URL = process.env.REACT_APP_API_URL;
-  console.log(BASE_URL);
   const USER_ID = "test123";
 
   const [selectedDate, setSelectedDate] = useState(
@@ -22,7 +28,7 @@ function App() {
       const data = await res.json();
       setTasks(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Tasks fetch failed:", err);
+      console.error(err);
     }
   };
 
@@ -44,35 +50,38 @@ function App() {
 
       setEntries(formatted);
     } catch (err) {
-      console.error("Entries fetch failed:", err);
+      console.error(err);
     }
   }, [selectedDate]);
+
+  const fetchWeeklyStats = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/weekly-stats`);
+      const data = await res.json();
+      if (Array.isArray(data)) setWeeklyData(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     fetchTasks();
     fetchEntries();
     fetchWeeklyStats();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [selectedDate]);
 
-  // ADD TASK
   const addTask = async () => {
     if (!newTask.trim()) return;
 
-    try {
-      await fetch(`${BASE_URL}/add-task?name=${newTask}&user_id=${USER_ID}`, {
-        method: "POST"
-      });
+    await fetch(`${BASE_URL}/add-task?name=${newTask}&user_id=${USER_ID}`, {
+      method: "POST"
+    });
 
-      setNewTask("");
-      fetchTasks();
-    } catch (err) {
-      console.error("Add task failed:", err);
-    }
+    setNewTask("");
+    fetchTasks();
   };
 
-  // HANDLE CHANGE
   const handleChange = (taskId, field, value) => {
     setEntries(prev => ({
       ...prev,
@@ -83,209 +92,188 @@ function App() {
     }));
   };
 
-  // SAVE ENTRY
   const saveEntry = async (taskId) => {
     const entry = entries[taskId];
+    if (!entry || !entry.status) return alert("Select status");
 
-    if (!entry || !entry.status) {
-      alert("Select status");
-      return;
-    }
+    await fetch(
+      `${BASE_URL}/add-entry?task_id=${taskId}&status=${entry.status}&comment=${entry.comment || ""}&date=${selectedDate}`,
+      { method: "POST" }
+    );
 
-    try {
-      await fetch(
-        `${BASE_URL}/add-entry?task_id=${taskId}&status=${entry.status}&comment=${entry.comment || ""}&date=${selectedDate}`,
-        { method: "POST" }
-      );
-
-      await fetchEntries(); // ✅ refresh data after save
-      alert("Saved");
-    } catch (err) {
-      console.error("Save failed:", err);
-    }
+    fetchEntries();
   };
-
-  // WEEKLY TASK FOR CHARTS
-  const fetchWeeklyStats = async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/weekly-stats`);
-      const data = await res.json();
-
-      if (Array.isArray(data)) {
-        setWeeklyData(data);
-      }
-    } catch (err) {
-      console.error("Weekly stats error:", err);
-    }
-  };
-
 
   // GROUPING
-  const newTasks = tasks.filter(task => !entries[task.id]?.status);
-  const doneTasks = tasks.filter(task => entries[task.id]?.status === "Done");
-  const pendingTasks = tasks.filter(task => entries[task.id]?.status === "Pending");
-  const notDoneTasks = tasks.filter(task => entries[task.id]?.status === "Not Done");
+  const newTasks = tasks.filter(t => !entries[t.id]?.status);
+  const doneTasks = tasks.filter(t => entries[t.id]?.status === "Done");
+  const pendingTasks = tasks.filter(t => entries[t.id]?.status === "Pending");
+  const notDoneTasks = tasks.filter(t => entries[t.id]?.status === "Not Done");
 
   return (
-    <div style={{minHeight: "100vh",background: "linear-gradient(to right, #dbeafe, #e9d5ff)",padding: "30px"}}>
-      <h1 style={{fontSize: "28px", fontWeight: "bold", marginBottom: "20px", textAlign: "center"}}> Task Tracker</h1>
-
-      {/* ADD TASK */}
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(to right, #dbeafe, #e9d5ff)",
+      padding: "30px"
+    }}>
+      
+      {/* CONTAINER */}
       <div style={{
-        display: "flex",
-        gap: "10px",
-        marginBottom: "20px",
-        justifyContent: "center"
+        maxWidth: "900px",
+        margin: "auto"
       }}>
-        <input
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Enter task"
-          style={{
-            padding: "10px",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            width: "60%"
-          }}
-        />
 
-        <button
-          onClick={addTask}
-          disabled={!newTask.trim()}
-          style={{
-            background: "#22c55e",
-            color: "white",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "8px",
-            cursor: "pointer"
-          }}
-        >
-          Add
-        </button>
-      </div>
-
-      {/* DATE SELECTOR */}
-      <div style={{
-        marginBottom: "20px",
-        textAlign: "center"
-      }}>
-        <strong>Date: </strong>
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "6px",
-            border: "1px solid #ccc"
-          }}
-        />
-      </div>
-      {/* WEEKLY DATA FOR CHARTS */}
-      {/* WEEKLY PROGRESS CHART */}
-      <div style={{
-        background: "white",
-        padding: "20px",
-        borderRadius: "12px",
-        marginBottom: "20px",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
-      }}>
-        <h3 style={{ marginBottom: "10px" }}>📊 Weekly Progress</h3>
-
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={weeklyData}>
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="done" fill="#22c55e" radius={[5,5,0,0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* 🆕 NEW TASKS */}
-      <h2 style={{ marginTop: "20px", color: "#374151" }}>🆕 New</h2>
-      {newTasks.length === 0 && <p>No new tasks</p>}
-
-      {newTasks.map(task => (
-        <div key={task.id} style={{
-          marginBottom: "15px",
-          padding: "15px",
-          borderRadius: "12px",
-          background: "white",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+        <h1 style={{
+          textAlign: "center",
+          fontSize: "32px",
+          marginBottom: "25px"
         }}>
-          <h3>{task.name}</h3>
+          🚀 Task Tracker
+        </h1>
 
-          <select
-            value={entries[task.id]?.status || ""}
-            onChange={(e) =>
-              handleChange(task.id, "status", e.target.value)
-            }
-          >
-            <option value="">Select</option>
-            <option>Done</option>
-            <option>Pending</option>
-            <option>Not Done</option>
-          </select>
-
+        {/* ADD TASK */}
+        <div style={{
+          display: "flex",
+          gap: "10px",
+          marginBottom: "20px"
+        }}>
           <input
-            value={entries[task.id]?.comment || ""}
-            placeholder="Comment"
-            onChange={(e) =>
-              handleChange(task.id, "comment", e.target.value)
-            }
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="Enter task..."
+            style={{
+              flex: 1,
+              padding: "12px",
+              borderRadius: "10px",
+              border: "1px solid #ddd"
+            }}
           />
 
           <button
-            onClick={() => saveEntry(task.id)}
-            disabled={!entries[task.id]?.status}
+            onClick={addTask}
+            disabled={!newTask.trim()}
             style={{
-              marginTop: "10px",
-              background: "#3b82f6",
+              background: "#22c55e",
               color: "white",
               border: "none",
-              padding: "8px 12px",
-              borderRadius: "6px",
+              padding: "12px 18px",
+              borderRadius: "10px",
               cursor: "pointer"
             }}
           >
-            Save
+            Add
           </button>
         </div>
-      ))}
 
-      {/* ✅ DONE */}
-      <h2 style={{ marginTop: "20px", color: "#374151" }}> Done</h2>
-      {doneTasks.length === 0 && <p>No completed tasks</p>}
-
-      {doneTasks.map(task => (
-        <div key={task.id} style={{ marginBottom: "10px" }}>
-          <h3>{task.name}</h3>
+        {/* DATE */}
+        <div style={{ marginBottom: "20px" }}>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ddd"
+            }}
+          />
         </div>
-      ))}
 
-      {/* ⏳ PENDING */}
-      {/* ⏳ PENDING */}
-      
-      <h2 style={{ marginTop: "20px", color: "#374151" }}> Pending</h2>
-      {pendingTasks.length === 0 && <p>No pending tasks</p>}
+        {/* CHART */}
+        <div style={{
+          background: "white",
+          padding: "20px",
+          borderRadius: "12px",
+          marginBottom: "25px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+        }}>
+          <h3>📊 Weekly Progress</h3>
 
-      {pendingTasks.map(task => (
-        <div key={task.id} style={{ marginBottom: "10px" }}>
-          <h3>{task.name}</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={weeklyData}>
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="done" fill="#22c55e" radius={[6,6,0,0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-      ))}
 
-      {/* ❌ NOT DONE */}
-      <h2>❌ Not Done</h2>
-      {notDoneTasks.length === 0 && <p>No failed tasks</p>}
+        {/* TASK SECTION COMPONENT */}
+        {[
+          { title: "🆕 New", data: newTasks },
+          { title: "✅ Done", data: doneTasks },
+          { title: "⏳ Pending", data: pendingTasks },
+          { title: "❌ Not Done", data: notDoneTasks }
+        ].map(section => (
+          <div key={section.title} style={{ marginBottom: "20px" }}>
+            <h2>{section.title}</h2>
 
-      {notDoneTasks.map(task => (
-        <div key={task.id} style={{ marginBottom: "10px" }}>
-          <h3>{task.name}</h3>
-        </div>
-      ))}
+            {section.data.length === 0 && <p>No tasks</p>}
+
+            {section.data.map(task => (
+              <div key={task.id} style={{
+                background: "white",
+                padding: "15px",
+                borderRadius: "10px",
+                marginTop: "10px",
+                boxShadow: "0 3px 8px rgba(0,0,0,0.08)"
+              }}>
+                <h4>{task.name}</h4>
+
+                {!entries[task.id]?.status && (
+                  <>
+                    <select
+                      value={entries[task.id]?.status || ""}
+                      onChange={(e) =>
+                        handleChange(task.id, "status", e.target.value)
+                      }
+                      style={{
+                        padding: "8px",
+                        borderRadius: "6px",
+                        marginTop: "5px"
+                      }}
+                    >
+                      <option value="">Select</option>
+                      <option>Done</option>
+                      <option>Pending</option>
+                      <option>Not Done</option>
+                    </select>
+
+                    <input
+                      placeholder="Comment"
+                      onChange={(e) =>
+                        handleChange(task.id, "comment", e.target.value)
+                      }
+                      style={{
+                        marginLeft: "10px",
+                        padding: "8px",
+                        borderRadius: "6px",
+                        border: "1px solid #ddd"
+                      }}
+                    />
+
+                    <button
+                      onClick={() => saveEntry(task.id)}
+                      style={{
+                        marginLeft: "10px",
+                        background: "#3b82f6",
+                        color: "white",
+                        border: "none",
+                        padding: "8px 12px",
+                        borderRadius: "6px"
+                      }}
+                    >
+                      Save
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+
+      </div>
     </div>
   );
 }
