@@ -8,21 +8,22 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+// ✅ Move constants OUTSIDE
+const BASE_URL = process.env.REACT_APP_API_URL;
+const USER_ID = "test123";
+
 function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [entries, setEntries] = useState({});
   const [weeklyData, setWeeklyData] = useState([]);
 
-  const BASE_URL = process.env.REACT_APP_API_URL;
-  const USER_ID = "test123";
-
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
 
-  // FETCH TASKS
-  const fetchTasks = async () => {
+  // ✅ FETCH TASKS
+  const fetchTasks = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/tasks/${USER_ID}`);
       const data = await res.json();
@@ -30,9 +31,9 @@ function App() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
-  // FETCH ENTRIES
+  // ✅ FETCH ENTRIES (fixed dependencies)
   const fetchEntries = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/entries/${USER_ID}`);
@@ -41,7 +42,7 @@ function App() {
       const formatted = {};
 
       if (Array.isArray(data)) {
-        data.forEach(entry => {
+        data.forEach((entry) => {
           if (entry.date === selectedDate) {
             formatted[entry.task_id] = entry;
           }
@@ -54,7 +55,8 @@ function App() {
     }
   }, [selectedDate]);
 
-  const fetchWeeklyStats = async () => {
+  // ✅ FETCH WEEKLY STATS
+  const fetchWeeklyStats = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/weekly-stats`);
       const data = await res.json();
@@ -62,28 +64,31 @@ function App() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
+  // ✅ useEffect CLEAN (no eslint disable)
   useEffect(() => {
     fetchTasks();
     fetchEntries();
     fetchWeeklyStats();
-    // eslint-disable-next-line
-  }, [selectedDate]);
+  }, [fetchTasks, fetchEntries, fetchWeeklyStats]);
 
+  // ✅ ADD TASK
   const addTask = async () => {
     if (!newTask.trim()) return;
 
-    await fetch(`${BASE_URL}/add-task?name=${newTask}&user_id=${USER_ID}`, {
-      method: "POST"
-    });
+    await fetch(
+      `${BASE_URL}/add-task?name=${newTask}&user_id=${USER_ID}`,
+      { method: "POST" }
+    );
 
     setNewTask("");
     fetchTasks();
   };
 
+  // ✅ HANDLE CHANGE
   const handleChange = (taskId, field, value) => {
-    setEntries(prev => ({
+    setEntries((prev) => ({
       ...prev,
       [taskId]: {
         ...prev[taskId],
@@ -92,51 +97,52 @@ function App() {
     }));
   };
 
+  // ✅ SAVE ENTRY
   const saveEntry = async (taskId) => {
     const entry = entries[taskId];
     if (!entry || !entry.status) return alert("Select status");
 
     await fetch(
-      `${BASE_URL}/add-entry?task_id=${taskId}&status=${entry.status}&comment=${entry.comment || ""}&date=${selectedDate}`,
+      `${BASE_URL}/add-entry?task_id=${taskId}&status=${entry.status}&comment=${
+        entry.comment || ""
+      }&date=${selectedDate}`,
       { method: "POST" }
     );
 
     fetchEntries();
   };
 
-  // GROUPING
-  const newTasks = tasks.filter(t => !entries[t.id]?.status);
-  const doneTasks = tasks.filter(t => entries[t.id]?.status === "Done");
-  const pendingTasks = tasks.filter(t => entries[t.id]?.status === "Pending");
-  const notDoneTasks = tasks.filter(t => entries[t.id]?.status === "Not Done");
+  // ✅ GROUPING
+  const newTasks = tasks.filter((t) => !entries[t.id]?.status);
+  const doneTasks = tasks.filter((t) => entries[t.id]?.status === "Done");
+  const pendingTasks = tasks.filter(
+    (t) => entries[t.id]?.status === "Pending"
+  );
+  const notDoneTasks = tasks.filter(
+    (t) => entries[t.id]?.status === "Not Done"
+  );
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(to right, #dbeafe, #e9d5ff)",
-      padding: "30px"
-    }}>
-      
-      {/* CONTAINER */}
-      <div style={{
-        maxWidth: "900px",
-        margin: "auto"
-      }}>
-
-        <h1 style={{
-          textAlign: "center",
-          fontSize: "32px",
-          marginBottom: "25px"
-        }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(to right, #dbeafe, #e9d5ff)",
+        padding: "30px"
+      }}
+    >
+      <div style={{ maxWidth: "900px", margin: "auto" }}>
+        <h1
+          style={{
+            textAlign: "center",
+            fontSize: "32px",
+            marginBottom: "25px"
+          }}
+        >
           🚀 Task Tracker
         </h1>
 
         {/* ADD TASK */}
-        <div style={{
-          display: "flex",
-          gap: "10px",
-          marginBottom: "20px"
-        }}>
+        <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
           <input
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
@@ -180,13 +186,15 @@ function App() {
         </div>
 
         {/* CHART */}
-        <div style={{
-          background: "white",
-          padding: "20px",
-          borderRadius: "12px",
-          marginBottom: "25px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-        }}>
+        <div
+          style={{
+            background: "white",
+            padding: "20px",
+            borderRadius: "12px",
+            marginBottom: "25px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+          }}
+        >
           <h3>📊 Weekly Progress</h3>
 
           <ResponsiveContainer width="100%" height={250}>
@@ -194,31 +202,34 @@ function App() {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="done" fill="#22c55e" radius={[6,6,0,0]} />
+              <Bar dataKey="done" fill="#22c55e" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* TASK SECTION COMPONENT */}
+        {/* TASK SECTIONS */}
         {[
           { title: "🆕 New", data: newTasks },
           { title: "✅ Done", data: doneTasks },
           { title: "⏳ Pending", data: pendingTasks },
           { title: "❌ Not Done", data: notDoneTasks }
-        ].map(section => (
+        ].map((section) => (
           <div key={section.title} style={{ marginBottom: "20px" }}>
             <h2>{section.title}</h2>
 
             {section.data.length === 0 && <p>No tasks</p>}
 
-            {section.data.map(task => (
-              <div key={task.id} style={{
-                background: "white",
-                padding: "15px",
-                borderRadius: "10px",
-                marginTop: "10px",
-                boxShadow: "0 3px 8px rgba(0,0,0,0.08)"
-              }}>
+            {section.data.map((task) => (
+              <div
+                key={task.id}
+                style={{
+                  background: "white",
+                  padding: "15px",
+                  borderRadius: "10px",
+                  marginTop: "10px",
+                  boxShadow: "0 3px 8px rgba(0,0,0,0.08)"
+                }}
+              >
                 <h4>{task.name}</h4>
 
                 {!entries[task.id]?.status && (
@@ -272,7 +283,6 @@ function App() {
             ))}
           </div>
         ))}
-
       </div>
     </div>
   );
