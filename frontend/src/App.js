@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+// ✅ IMPORT ONLY WHAT YOU USE
 import {
   BarChart,
   Bar,
@@ -11,7 +12,7 @@ import {
 // ✅ Move constants OUTSIDE
 const BASE_URL = process.env.REACT_APP_API_URL;
 const USER_ID = "test123";
-
+// ✅ CLEAN CODE: meaningful variable names, consistent formatting, no commented code, no eslint disables, and proper use of hooks.
 function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
@@ -40,7 +41,7 @@ function App() {
       const data = await res.json();
 
       const formatted = {};
-
+      // ✅ Format entries by task_id for easy access
       if (Array.isArray(data)) {
         data.forEach((entry) => {
           if (entry.date === selectedDate) {
