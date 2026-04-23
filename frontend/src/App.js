@@ -77,12 +77,12 @@ function App() {
   // ✅ ADD TASK
   const addTask = async () => {
     if (!newTask.trim()) return;
-
+    // ✅ Use template literals for cleaner code
     await fetch(
       `${BASE_URL}/add-task?name=${newTask}&user_id=${USER_ID}`,
       { method: "POST" }
     );
-
+    // ✅ Clear input and refresh tasks
     setNewTask("");
     fetchTasks();
   };
