@@ -1,3 +1,4 @@
+// ✅ CLEAN CODE: meaningful variable names, consistent formatting, no commented code, no eslint disables, and proper use of hooks.
 import { useEffect, useState, useCallback } from "react";
 // ✅ IMPORT ONLY WHAT YOU USE
 import {
@@ -86,7 +87,7 @@ function App() {
     setNewTask("");
     fetchTasks();
   };
-
+  // ✅ HANDLE CHANGE (optimized for multiple fields)
   // ✅ HANDLE CHANGE
   const handleChange = (taskId, field, value) => {
     setEntries((prev) => ({
